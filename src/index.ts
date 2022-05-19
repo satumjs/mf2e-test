@@ -1,13 +1,15 @@
 import {
   register,
-  start,
+  start as coreStart,
   use,
   MidwareName,
   corsRuleLabel,
+  KeyObject,
 } from '@satumjs/core';
 import {
   simpleSandboxMidware,
   mountNodeMidware,
+  simpleCacheMidware,
 } from '@satumjs/simple-midwares';
 import singleSpaMidware from '@satumjs/midware-single-spa';
 
@@ -31,15 +33,23 @@ use((system, microApps, next) => {
   next();
 });
 
-use((system, _, next) => {
-  system.set(MidwareName.urlOption, {
-    corsRule: `https://cors-server-test.com/?target=${corsRuleLabel}`,
-  });
-  next();
-});
+function start(options: KeyObject<any>) {
+  const { enableCache, corsServerUrl, ...opts } = options || {};
 
-use(simpleSandboxMidware);
-use(mountNodeMidware);
-use(singleSpaMidware);
+  if (enableCache) use(simpleCacheMidware, opts);
+
+  use((system, _, next) => {
+    system.set(MidwareName.urlOption, {
+      corsRule: `${corsServerUrl}?target=${corsRuleLabel}`,
+    });
+    next();
+  });
+
+  use(simpleSandboxMidware, opts);
+  use(mountNodeMidware, opts);
+  use(singleSpaMidware, opts);
+
+  coreStart(opts);
+}
 
 export { register, start };
