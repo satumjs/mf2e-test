@@ -1,4 +1,10 @@
-import { register, start, use, MidwareName } from '@satumjs/core';
+import {
+  register,
+  start,
+  use,
+  MidwareName,
+  corsRuleLabel,
+} from '@satumjs/core';
 import {
   simpleSandboxMidware,
   mountNodeMidware,
@@ -22,6 +28,13 @@ use((system, microApps, next) => {
       return currentApp && proxyMap[appName] ? proxyMap[appName] : entry;
     }
   );
+  next();
+});
+
+use((system, _, next) => {
+  system.set(MidwareName.urlOption, {
+    corsRule: `https://cors-server-test.com/?target=${corsRuleLabel}`,
+  });
   next();
 });
 
